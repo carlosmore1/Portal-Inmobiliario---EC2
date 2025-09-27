@@ -1,0 +1,68 @@
+@model PortalInmobiliario.Models.Inmueble
+<h3>Crear Inmueble</h3>
+<form asp-action="Create" method="post" class="row g-2">
+  @Html.AntiForgeryToken()
+  <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+  <div class="col-md-3">
+    <label class="form-label">Código</label>
+    <input class="form-control" asp-for="Codigo" />
+    <span class="text-danger" asp-validation-for="Codigo"></span>
+  </div>
+  <div class="col-md-5">
+    <label class="form-label">Título</label>
+    <input class="form-control" asp-for="Titulo" />
+    <span class="text-danger" asp-validation-for="Titulo"></span>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Imagen (URL)</label>
+    <input class="form-control" asp-for="Imagen" />
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label">Tipo</label>
+    <select class="form-select" asp-for="Tipo" asp-items="Html.GetEnumSelectList<TipoInmueble>()"></select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Ciudad</label>
+    <input class="form-control" asp-for="Ciudad" />
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Dirección</label>
+    <input class="form-control" asp-for="Direccion" />
+  </div>
+
+  <div class="col-md-2">
+    <label class="form-label">Dorms</label>
+    <input class="form-control" asp-for="Dormitorios" />
+  </div>
+  <div class="col-md-2">
+    <label class="form-label">Baños</label>
+    <input class="form-control" asp-for="Banos" />
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">m²</label>
+    <input class="form-control" asp-for="MetrosCuadrados" />
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Precio</label>
+    <input class="form-control" asp-for="Precio" />
+    <span class="text-danger" asp-validation-for="Precio"></span>
+  </div>
+
+  <div class="col-12">
+    <div class="form-check">
+      <input class="form-check-input" asp-for="Activo" />
+      <label class="form-check-label" asp-for="Activo">Activo</label>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <a class="btn btn-secondary" asp-action="Index">Volver</a>
+  </div>
+</form>
+
+@section Scripts{
+  <partial name="_ValidationScriptsPartial" />
+}

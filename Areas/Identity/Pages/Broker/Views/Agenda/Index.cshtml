@@ -1,0 +1,32 @@
+@model IEnumerable<PortalInmobiliario.Models.Visita>
+<h3>Agenda de hoy</h3>
+@if (TempData["Ok"] != null) { <div class="alert alert-success">@TempData["Ok"]</div> }
+
+<table class="table table-sm">
+  <thead>
+    <tr><th>Hora</th><th>Inmueble</th><th>Cliente</th><th>Estado</th><th></th></tr>
+  </thead>
+  <tbody>
+  @foreach (var v in Model)
+  {
+    <tr>
+      <td>@v.FechaInicio.ToString("HH\\:mm") - @v.FechaFin.ToString("HH\\:mm")</td>
+      <td>@v.Inmueble?.Titulo (@v.Inmueble?.Ciudad)</td>
+      <td>@v.UsuarioId</td>
+      <td>@v.Estado</td>
+      <td class="d-flex gap-2">
+        <form asp-action="Confirmar" method="post">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@v.Id" />
+          <button class="btn btn-sm btn-success" type="submit">Confirmar</button>
+        </form>
+        <form asp-action="Cancelar" method="post">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@v.Id" />
+          <button class="btn btn-sm btn-warning" type="submit">Cancelar</button>
+        </form>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>
