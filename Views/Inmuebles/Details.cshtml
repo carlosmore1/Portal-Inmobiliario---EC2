@@ -1,0 +1,32 @@
+@model PortalInmobiliario.Models.Inmueble
+@{
+    ViewData["Title"] = "Detalle";
+}
+
+<h2>@Model.Titulo</h2>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        @if (!string.IsNullOrWhiteSpace(Model.Imagen))
+        {
+            <img src="@Model.Imagen" class="img-fluid rounded" alt="@Model.Titulo" />
+        }
+    </div>
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">Código</dt><dd class="col-sm-8">@Model.Codigo</dd>
+            <dt class="col-sm-4">Tipo</dt><dd class="col-sm-8">@Model.Tipo</dd>
+            <dt class="col-sm-4">Ciudad</dt><dd class="col-sm-8">@Model.Ciudad</dd>
+            <dt class="col-sm-4">Dirección</dt><dd class="col-sm-8">@Model.Direccion</dd>
+            <dt class="col-sm-4">Dorms/Baños</dt><dd class="col-sm-8">@Model.Dormitorios / @Model.Banos</dd>
+            <dt class="col-sm-4">Área</dt><dd class="col-sm-8">@Model.MetrosCuadrados m²</dd>
+            <dt class="col-sm-4">Precio</dt><dd class="col-sm-8">S/ @Model.Precio</dd>
+        </dl>
+
+        <a class="btn btn-primary"
+           asp-controller="Visitas" asp-action="Create" asp-route-inmuebleId="@Model.Id">
+            Agendar visita
+        </a>
+        <!-- Solo se muestra el botón; la funcionalidad/validaciones de visitas será en la P3 -->
+    </div>
+</div>

@@ -1,0 +1,137 @@
+@model PortalInmobiliario.ViewModels.CatalogoFiltroVm
+@using PortalInmobiliario.Models
+@{
+    ViewData["Title"] = "Catálogo";
+
+    // ← Cálculo de paginación FUERA del if/else para evitar anidar @{...}
+    var totalPages = (int)Math.Ceiling(Model.Total / (double)Model.PageSize);
+    var current = Model.Page;
+}
+
+<h2>Catálogo</h2>
+
+<form asp-action="Index" method="get" class="mb-3">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row g-2">
+        <div class="col-md-3">
+            <label class="form-label">Ciudad</label>
+            <select class="form-select" asp-for="Ciudad" asp-items="@(new SelectList(Model.Ciudades))">
+                <option value="">-- Todas --</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" asp-for="Tipo" asp-items="Html.GetEnumSelectList<TipoInmueble>()">
+                <option value="">-- Todos --</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Precio mín.</label>
+            <input class="form-control" asp-for="PrecioMin" />
+            <span class="text-danger" asp-validation-for="PrecioMin"></span>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Precio máx.</label>
+            <input class="form-control" asp-for="PrecioMax" />
+            <span class="text-danger" asp-validation-for="PrecioMax"></span>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Dormitorios ≥</label>
+            <input class="form-control" asp-for="DormitoriosMin" />
+            <span class="text-danger" asp-validation-for="DormitoriosMin"></span>
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex align-items-center gap-2">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Limpiar</a>
+    </div>
+</form>
+
+@if (Model.Total == 0)
+{
+    <p>No se encontraron inmuebles con los filtros seleccionados.</p>
+}
+else
+{
+    <p><strong>@Model.Total</strong> inmuebles encontrados.</p>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var i in Model.Resultados)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    @if (!string.IsNullOrWhiteSpace(i.Imagen))
+                    {
+                        <img src="@i.Imagen" class="card-img-top" alt="@i.Titulo" />
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title">@i.Titulo</h5>
+                        <p class="card-text mb-1"><strong>Código:</strong> @i.Codigo</p>
+                        <p class="card-text mb-1"><strong>Tipo:</strong> @i.Tipo</p>
+                        <p class="card-text mb-1"><strong>Ciudad:</strong> @i.Ciudad</p>
+                        <p class="card-text mb-1"><strong>Dorms/Baños:</strong> @i.Dormitorios / @i.Banos</p>
+                        <p class="card-text mb-1"><strong>Área:</strong> @i.MetrosCuadrados m²</p>
+                        <p class="card-text"><strong>Precio:</strong> S/ @i.Precio</p>
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@i.Id">Ver detalle</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination">
+                <li class="page-item @(current == 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-Ciudad="@Model.Ciudad"
+                       asp-route-Tipo="@Model.Tipo"
+                       asp-route-PrecioMin="@Model.PrecioMin"
+                       asp-route-PrecioMax="@Model.PrecioMax"
+                       asp-route-DormitoriosMin="@Model.DormitoriosMin"
+                       asp-route-Page="@(current - 1)"
+                       asp-route-PageSize="@Model.PageSize">Anterior</a>
+                </li>
+
+                @for (int p = 1; p <= totalPages; p++)
+                {
+                    <li class="page-item @(p == current ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-Ciudad="@Model.Ciudad"
+                           asp-route-Tipo="@Model.Tipo"
+                           asp-route-PrecioMin="@Model.PrecioMin"
+                           asp-route-PrecioMax="@Model.PrecioMax"
+                           asp-route-DormitoriosMin="@Model.DormitoriosMin"
+                           asp-route-Page="@p"
+                           asp-route-PageSize="@Model.PageSize">@p</a>
+                    </li>
+                }
+
+                <li class="page-item @(current == totalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-Ciudad="@Model.Ciudad"
+                       asp-route-Tipo="@Model.Tipo"
+                       asp-route-PrecioMin="@Model.PrecioMin"
+                       asp-route-PrecioMax="@Model.PrecioMax"
+                       asp-route-DormitoriosMin="@Model.DormitoriosMin"
+                       asp-route-Page="@(current + 1)"
+                       asp-route-PageSize="@Model.PageSize">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
