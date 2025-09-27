@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: portal-inmobiliario
+    env: node
+    buildCommand: |
+      dotnet restore
+      dotnet publish -c Release -o out
+    startCommand: |
+      cd out && dotnet PortalInmobiliario.dll
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:${PORT}
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Redis__ConnectionString
+        sync: false
