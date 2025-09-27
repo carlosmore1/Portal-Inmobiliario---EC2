@@ -6,27 +6,35 @@ using PortalInmobiliario.Services; // ← CatalogoCache / AgendaService
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- DB e Identity (lo que ya tenías) ---
+// --- DB e Identity ---
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// ⬇️ Habilitar Roles (AddRoles<IdentityRole>())
 builder.Services.AddDefaultIdentity<IdentityUser>(opts =>
 {
     opts.SignIn.RequireConfirmedAccount = false;
 })
+.AddRoles<IdentityRole>() // ← P5
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// ⬇️ AccessDenied claro
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.AccessDeniedPath = "/Account/AccessDenied";
+});
 
 builder.Services.AddControllersWithViews();
 
-// --- ⬇️ NUEVO: Redis Cache (leerá Redis:ConnectionString o REDIS__ConnectionString) ---
+// --- Redis Cache ---
 builder.Services.AddStackExchangeRedisCache(opt =>
 {
     opt.Configuration = builder.Configuration["Redis:ConnectionString"];
 });
 
-// --- ⬇️ NUEVO: Sesión ---
+// --- Sesión ---
 builder.Services.AddSession(o =>
 {
     o.IdleTimeout = TimeSpan.FromMinutes(20);
@@ -34,9 +42,9 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-// --- ⬇️ NUEVO: Servicios P3/P4 ---
-builder.Services.AddScoped<AgendaService>();     // si ya existía, no pasa nada
-builder.Services.AddScoped<CatalogoCache>();     // cache de catálogo (P4)
+// --- Servicios P3/P4 ---
+builder.Services.AddScoped<AgendaService>();
+builder.Services.AddScoped<CatalogoCache>();
 
 var app = builder.Build();
 
@@ -58,7 +66,15 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSession(); // ← ⬅️ IMPORTANTE: habilita sesión antes de mapear rutas
+app.UseSession();
+
+// ⬇️ Seed del rol "Broker" si no existe (P5)
+using (var scope = app.Services.CreateScope())
+{
+    var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    if (!await roleMgr.RoleExistsAsync("Broker"))
+        await roleMgr.CreateAsync(new IdentityRole("Broker"));
+}
 
 app.MapControllerRoute(
     name: "default",

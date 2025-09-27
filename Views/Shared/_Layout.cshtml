@@ -43,6 +43,16 @@
                                 </a>
                             </li>
                         }
+
+                        <!-- 🔹 P5: Link al Panel Broker solo para rol Broker -->
+                        @if (User.IsInRole("Broker"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Broker" asp-controller="Inmuebles" asp-action="Index">
+                                    Panel Broker
+                                </a>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

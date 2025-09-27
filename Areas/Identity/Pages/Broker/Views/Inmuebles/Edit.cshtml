@@ -1,0 +1,10 @@
+@model PortalInmobiliario.Models.Inmueble
+<h3>Editar Inmueble</h3>
+<form asp-action="Edit" method="post" class="row g-2">
+  @Html.AntiForgeryToken()
+  <input type="hidden" asp-for="Id" />
+  <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+  <!-- mismos campos que Create -->
+  <partial name="../Inmuebles/Create" />
+</form>

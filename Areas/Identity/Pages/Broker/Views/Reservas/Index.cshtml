@@ -1,0 +1,27 @@
+@model IEnumerable<PortalInmobiliario.Models.Reserva>
+<h3>Reservas activas</h3>
+@if (TempData["Ok"] != null) { <div class="alert alert-success">@TempData["Ok"]</div> }
+
+<table class="table table-sm">
+  <thead>
+    <tr><th>Inmueble</th><th>Usuario</th><th>Creada (UTC)</th><th>Expira (UTC)</th><th></th></tr>
+  </thead>
+  <tbody>
+  @foreach (var r in Model)
+  {
+    <tr>
+      <td>@r.Inmueble?.Titulo</td>
+      <td>@r.UsuarioId</td>
+      <td>@r.FechaCreacion</td>
+      <td>@r.FechaExpiracion</td>
+      <td>
+        <form asp-action="Liberar" method="post">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@r.Id" />
+          <button class="btn btn-sm btn-danger" type="submit">Liberar</button>
+        </form>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>

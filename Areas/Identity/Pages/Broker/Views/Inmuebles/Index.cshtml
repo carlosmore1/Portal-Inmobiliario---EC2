@@ -1,0 +1,40 @@
+@model IEnumerable<PortalInmobiliario.Models.Inmueble>
+<h3>Inmuebles</h3>
+@if (TempData["Ok"] != null) { <div class="alert alert-success">@TempData["Ok"]</div> }
+
+<p>
+  <a class="btn btn-primary" asp-action="Create">Crear</a>
+  <a class="btn btn-outline-secondary ms-2" asp-area="Broker" asp-controller="Agenda" asp-action="Index">Agenda de hoy</a>
+  <a class="btn btn-outline-secondary ms-2" asp-area="Broker" asp-controller="Reservas" asp-action="Index">Reservas activas</a>
+</p>
+
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Código</th><th>Título</th><th>Ciudad</th><th>Tipo</th><th>Activo</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  @foreach (var i in Model)
+  {
+    <tr>
+      <td>@i.Codigo</td>
+      <td>@i.Titulo</td>
+      <td>@i.Ciudad</td>
+      <td>@i.Tipo</td>
+      <td>@(i.Activo ? "Sí" : "No")</td>
+      <td class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@i.Id">Editar</a>
+        <form asp-action="Activar" method="post" class="d-inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@i.Id" />
+          <input type="hidden" name="activo" value="@(!i.Activo)" />
+          <button class="btn btn-sm @(i.Activo ? "btn-warning" : "btn-success")" type="submit">
+            @(i.Activo ? "Desactivar" : "Activar")
+          </button>
+        </form>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>
