@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PortalInmobiliario.Data;
 using PortalInmobiliario.ViewModels;
 using PortalInmobiliario.Models;
+using PortalInmobiliario.Services; // ← agregado
 using System.Linq;
 using System.Threading.Tasks;
 using System;
@@ -12,7 +13,14 @@ namespace PortalInmobiliario.Controllers
     public class InmueblesController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public InmueblesController(ApplicationDbContext db) => _db = db;
+        private readonly AgendaService _agenda; // ← agregado
+
+        // ← modificado para inyectar AgendaService
+        public InmueblesController(ApplicationDbContext db, AgendaService agenda)
+        {
+            _db = db;
+            _agenda = agenda;
+        }
 
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] CatalogoFiltroVm f)
@@ -78,6 +86,9 @@ namespace PortalInmobiliario.Controllers
                 .FirstOrDefaultAsync(i => i.Id == id && i.Activo);
 
             if (inm == null) return NotFound();
+
+            // ← agregado: flag para ocultar/mostrar el botón "Reservar ahora"
+            ViewBag.HasReservaActiva = await _agenda.TieneReservaActiva(id, DateTime.UtcNow);
 
             return View(inm);
         }
