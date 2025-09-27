@@ -7,8 +7,19 @@ using PortalInmobiliario.Services; // ← CatalogoCache / AgendaService
 var builder = WebApplication.CreateBuilder(args);
 
 // --- DB e Identity ---
+// ⬇️ P6: SQLite en Dev, Postgres en Prod (Render)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+    else
+    {
+        // En Render: ConnectionStrings__DefaultConnection = cadena de Postgres
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+});
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -68,9 +79,12 @@ app.UseAuthorization();
 
 app.UseSession();
 
-// ⬇️ Seed del rol "Broker" si no existe (P5)
+// ⬇️ P6: Migrar BD al arranque y seed del rol "Broker"
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync(); // ← aplica migraciones (Postgres en Render)
+
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     if (!await roleMgr.RoleExistsAsync("Broker"))
         await roleMgr.CreateAsync(new IdentityRole("Broker"));
