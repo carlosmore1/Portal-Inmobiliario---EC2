@@ -3,23 +3,32 @@ using Microsoft.EntityFrameworkCore;
 using PortalInmobiliario.Data;
 using PortalInmobiliario.ViewModels;
 using PortalInmobiliario.Models;
-using PortalInmobiliario.Services; // ← agregado
+using PortalInmobiliario.Services; // AgendaService + CatalogoCache
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Text.Json;            // ← para serializar filtros (sesión)
+using Microsoft.AspNetCore.Http;   // ← para HttpContext.Session.*
 
 namespace PortalInmobiliario.Controllers
 {
     public class InmueblesController : Controller
     {
         private readonly ApplicationDbContext _db;
-        private readonly AgendaService _agenda; // ← agregado
+        private readonly AgendaService _agenda;       // P3
+        private readonly CatalogoCache _catCache;     // ← P4 (Redis)
 
-        // ← modificado para inyectar AgendaService
-        public InmueblesController(ApplicationDbContext db, AgendaService agenda)
+        // Claves de sesión (P4)
+        private const string SessFiltros = "Cat:Filtros";
+        private const string SessUltimoId = "Cat:UltimoId";
+        private const string SessUltimoTitulo = "Cat:UltimoTitulo";
+
+        // ← inyectamos CatalogoCache además de AgendaService
+        public InmueblesController(ApplicationDbContext db, AgendaService agenda, CatalogoCache catCache)
         {
             _db = db;
             _agenda = agenda;
+            _catCache = catCache;
         }
 
         [HttpGet]
@@ -46,35 +55,21 @@ namespace PortalInmobiliario.Controllers
                 return View(f);
             }
 
-            // Query base: solo activos
-            var q = _db.Inmuebles.AsNoTracking().Where(i => i.Activo);
+            // ===== P4: usar caché Redis (60s) según filtros =====
+            var (datos, total) = await _catCache.Listar(f);
+            f.Resultados = datos;
+            f.Total = total;
 
-            // Aplicar filtros
-            if (!string.IsNullOrWhiteSpace(f.Ciudad))
-                q = q.Where(i => i.Ciudad == f.Ciudad);
-
-            if (f.Tipo.HasValue)
-                q = q.Where(i => i.Tipo == f.Tipo.Value);
-
-            if (f.PrecioMin is > 0)
-                q = q.Where(i => i.Precio >= f.PrecioMin!.Value);
-
-            if (f.PrecioMax is > 0)
-                q = q.Where(i => i.Precio <= f.PrecioMax!.Value);
-
-            if (f.DormitoriosMin is > 0)
-                q = q.Where(i => i.Dormitorios >= f.DormitoriosMin!.Value);
-
-            // Total para paginación
-            f.Total = await q.CountAsync();
-
-            // Paginación simple
-            var skip = (f.Page - 1) * f.PageSize;
-            f.Resultados = await q
-                .OrderBy(i => i.Precio)
-                .Skip(skip)
-                .Take(f.PageSize)
-                .ToListAsync();
+            // ===== P4: guardar filtros en sesión (sin Page/PageSize) =====
+            var filtrosSnapshot = new
+            {
+                f.Ciudad,
+                f.Tipo,
+                f.PrecioMin,
+                f.PrecioMax,
+                f.DormitoriosMin
+            };
+            HttpContext.Session.SetString(SessFiltros, JsonSerializer.Serialize(filtrosSnapshot));
 
             return View(f);
         }
@@ -87,8 +82,12 @@ namespace PortalInmobiliario.Controllers
 
             if (inm == null) return NotFound();
 
-            // ← agregado: flag para ocultar/mostrar el botón "Reservar ahora"
+            // P3: flag para ocultar/mostrar el botón "Reservar ahora"
             ViewBag.HasReservaActiva = await _agenda.TieneReservaActiva(id, DateTime.UtcNow);
+
+            // ===== P4: guardar "último inmueble" en sesión =====
+            HttpContext.Session.SetInt32(SessUltimoId, id);
+            HttpContext.Session.SetString(SessUltimoTitulo, inm.Titulo);
 
             return View(inm);
         }
